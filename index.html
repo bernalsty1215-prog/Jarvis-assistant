@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.A.R.V.I.S.</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: radial-gradient(circle, #102b48, #020711 75%);
+    color: #00cfff;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    min-height: 100vh;
+    padding: 25px 15px;
+}
+
+h1 {
+    letter-spacing: 7px;
+    font-size: 30px;
+    margin-top: 25px;
+    text-shadow: 0 0 15px #00cfff;
+}
+
+.subtitulo {
+    color: #8bdfff;
+    letter-spacing: 3px;
+    font-size: 11px;
+}
+
+.circle {
+    width: 190px;
+    height: 190px;
+    border: 3px solid #00cfff;
+    border-radius: 50%;
+    margin: 45px auto 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 65px;
+    box-shadow: 0 0 25px #00cfff,
+                inset 0 0 25px #007ca8;
+    animation: pulso 3s infinite;
+}
+
+@keyframes pulso {
+    50% { box-shadow: 0 0 45px #00cfff,
+                       inset 0 0 35px #007ca8; }
+}
+
+button {
+    display: block;
+    width: 85%;
+    max-width: 300px;
+    margin: 15px auto;
+    padding: 16px;
+    border: 1px solid #00cfff;
+    border-radius: 8px;
+    background: #06233b;
+    color: #00cfff;
+    font-size: 14px;
+    letter-spacing: 2px;
+}
+
+button:active {
+    background: #08749b;
+}
+
+#estado {
+    color: white;
+    margin-top: 25px;
+}
+
+#respuesta {
+    color: #9ceaff;
+    margin: 25px auto;
+    max-width: 350px;
+    line-height: 1.6;
+}
+</style>
+</head>
+
+<body>
+
+<h1>J.A.R.V.I.S.</h1>
+<p class="subtitulo">JUST A RATHER VERY INTELLIGENT SYSTEM</p>
+
+<div class="circle">J</div>
+
+<button onclick="escuchar()">🎙 HABLAR CON JARVIS</button>
+
+<button onclick="probarVoz()">🔊 PROBAR VOZ</button>
+
+<p id="estado">SISTEMA EN ESPERA</p>
+
+<p id="respuesta">Esperando instrucciones...</p>
+
+<script>
+
+const estado = document.getElementById("estado");
+const respuesta = document.getElementById("respuesta");
+
+function hablar(texto) {
+    speechSynthesis.cancel();
+
+    const voz = new SpeechSynthesisUtterance(texto);
+    voz.lang = "es-MX";
+    voz.rate = 0.92;
+    voz.pitch = 0.75;
+
+    voz.onstart = () => {
+        estado.textContent = "JARVIS RESPONDIENDO";
+    };
+
+    voz.onend = () => {
+        estado.textContent = "SISTEMA EN ESPERA";
+    };
+
+    speechSynthesis.speak(voz);
+}
+
+function probarVoz() {
+    respuesta.textContent =
+        "Prueba de comunicación iniciada.";
+
+    hablar("Hola. Soy Jarvis. Estoy listo para ayudarte.");
+}
+
+function responder(texto) {
+
+    const pregunta = texto.toLowerCase();
+    let mensaje = "";
+
+    if (pregunta.includes("hola")) {
+        mensaje = "Hola. Es un placer escucharte. ¿En qué puedo ayudarte?";
+    }
+
+    else if (pregunta.includes("cómo estás")) {
+        mensaje = "Todos mis sistemas funcionan correctamente. Gracias por preguntar.";
+    }
+
+    else if (pregunta.includes("tu nombre")) {
+        mensaje = "Mi nombre es Jarvis. Soy tu asistente virtual.";
+    }
+
+    else if (pregunta.includes("quién eres")) {
+        mensaje = "Soy Jarvis, tu sistema personal de asistencia.";
+    }
+
+    else if (pregunta.includes("hora")) {
+        mensaje = "Son las " +
+        new Date().toLocaleTimeString("es-MX",
+        {hour: "2-digit", minute: "2-digit"});
+    }
+
+    else if (pregunta.includes("fecha") ||
+             pregunta.includes("día es hoy")) {
+        mensaje = "Hoy es " +
+        new Date().toLocaleDateString("es-MX",
+        {weekday: "long", day: "numeric", month: "long"});
+    }
+
+    else if (pregunta.includes("gracias")) {
+        mensaje = "Siempre a tu servicio.";
+    }
+
+    else if (pregunta.includes("adiós")) {
+        mensaje = "Hasta pronto. Jarvis queda en espera.";
+    }
+
+    else {
+        mensaje = "He recibido tu mensaje: " + texto +
+        ". Todavía estoy aprendiendo a responder a esa solicitud.";
+    }
+
+    respuesta.textContent = mensaje;
+    hablar(mensaje);
+}
+
+function escuchar() {
+
+    const Reconocimiento =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+
+    if (!Reconocimiento) {
+        estado.textContent = "MICRÓFONO NO COMPATIBLE";
+        respuesta.textContent =
+            "Abre Jarvis en Google Chrome para probar el reconocimiento de voz.";
+        return;
+    }
+
+    const reconocimiento = new Reconocimiento();
+
+    reconocimiento.lang = "es-MX";
+    reconocimiento.continuous = false;
+    reconocimiento.interimResults = false;
+
+    reconocimiento.onstart = () => {
+        estado.textContent = "TE ESTOY ESCUCHANDO...";
+        respuesta.textContent = "Habla ahora.";
+    };
+
+    reconocimiento.onresult = (evento) => {
+        const texto =
+            evento.results[0][0].transcript;
+
+        respuesta.textContent = "Tú: " + texto;
+        responder(texto);
+    };
+
+    reconocimiento.onerror = (evento) => {
+        estado.textContent = "ERROR: " + evento.error;
+        respuesta.textContent =
+            "No pude reconocer tu voz. Comprueba el permiso del micrófono.";
+    };
+
+    reconocimiento.onend = () => {
+        if (estado.textContent === "TE ESTOY ESCUCHANDO...") {
+            estado.textContent = "SISTEMA EN ESPERA";
+        }
+    };
+
+    reconocimiento.start();
+}
+
+</script>
+
+</body>
+</html>
